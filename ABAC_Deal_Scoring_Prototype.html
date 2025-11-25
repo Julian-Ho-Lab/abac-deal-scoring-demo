@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABAC Capital - Deal Scoring Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            padding: 20px;
+        }
+
+        .header {
+            background: #0a1f44;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .abac-logo {
+            height: 50px;
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .by-fluency {
+            font-size: 12px;
+            color: #a0aec0;
+            font-weight: 400;
+        }
+
+        .time-filter-section {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .time-filter-label {
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .time-filter {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            color: #2d3748;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #f7fafc;
+        }
+
+        .filter-btn.active {
+            background: #0a1f44;
+            color: white;
+            border-color: #0a1f44;
+        }
+
+        .deals-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .deal-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .deal-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .deal-card.avanzar {
+            border-left-color: #48bb78;
+        }
+
+        .deal-card.profundizar {
+            border-left-color: #4299e1;
+        }
+
+        .deal-card.holdear {
+            border-left-color: #ed8936;
+        }
+
+        .deal-card.rechazar {
+            border-left-color: #f56565;
+        }
+
+        .deal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .deal-info h3 {
+            font-size: 20px;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .deal-info p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .deal-score {
+            text-align: right;
+        }
+
+        .score-number {
+            font-size: 36px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .recommendation {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .recommendation.avanzar {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .recommendation.profundizar {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .recommendation.holdear {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .recommendation.rechazar {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .criteria-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .criteria-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .criteria-name {
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .criteria-score {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .deal-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: #edf2f7;
+            color: #4a5568;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .push-crm-btn {
+            margin-top: 15px;
+            padding: 10px 16px;
+            background: #0a1f44;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .push-crm-btn:hover {
+            background: #1a3a64;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+
+        .linkedin-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #0077b5;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .linkedin-link:hover {
+            background: #006399;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #e2e8f0;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .close-btn:hover {
+            background: #cbd5e0;
+        }
+
+        .detail-section {
+            margin-bottom: 30px;
+        }
+
+        .detail-section h3 {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 15px;
+        }
+
+        .justification {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .justification h4 {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .justification p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .source-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 8px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .enriched-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .data-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .data-item strong {
+            display: block;
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .data-item p {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .next-steps-section {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .next-steps-section h4 {
+            font-size: 16px;
+            color: #1a202c;
+            margin-bottom: 12px;
+        }
+
+        .next-steps-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .next-steps-section li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #2d3748;
+            display: flex;
+            align-items: start;
+            gap: 8px;
+        }
+
+        .next-steps-section li:before {
+            content: "→";
+            color: #f39c12;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%23fff%7D%3C/style%3E%3C/defs%3E%3Cg%3E%3Ccircle class='cls-1' cx='15' cy='25' r='8'/%3E%3Ccircle class='cls-1' cx='40' cy='25' r='8'/%3E%3Ccircle class='cls-1' cx='65' cy='25' r='8'/%3E%3Ccircle class='cls-1' cx='15' cy='50' r='8'/%3E%3Ccircle class='cls-1' cx='40' cy='50' r='8' opacity='0.5'/%3E%3Ccircle class='cls-1' cx='65' cy='50' r='8' opacity='0.5'/%3E%3Ccircle class='cls-1' cx='15' cy='75' r='8' opacity='0.5'/%3E%3Ccircle class='cls-1' cx='40' cy='75' r='8' opacity='0.5'/%3E%3Ccircle class='cls-1' cx='65' cy='75' r='8' opacity='0.5'/%3E%3Ctext x='95' y='55' fill='%23fff' font-size='40' font-weight='700' font-family='Arial'%3EABAC%3C/text%3E%3Ctext x='95' y='80' fill='%239ca3af' font-size='18' font-family='Arial' letter-spacing='3'%3ECAPITAL%3C/text%3E%3C/g%3E%3C/svg%3E" alt="ABAC Capital" class="abac-logo">
+            <div class="header-text">
+                <h1>Deal Scoring Intelligence Platform</h1>
+                <div class="by-fluency">By Fluency Labs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="time-filter-section">
+        <span class="time-filter-label">Periodo:</span>
+        <select class="time-filter" onchange="updatePeriod(this.value)">
+            <option value="week">Esta semana</option>
+            <option value="month" selected>Este mes</option>
+            <option value="3months">Últimos 3 meses</option>
+            <option value="6months">Últimos 6 meses</option>
+            <option value="9months">Últimos 9 meses</option>
+            <option value="12months">Últimos 12 meses</option>
+            <option value="18months">Últimos 18 meses</option>
+        </select>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3>47</h3>
+            <p>Deals este mes</p>
+        </div>
+        <div class="stat-card">
+            <h3>12</h3>
+            <p>Recomendados Avanzar</p>
+        </div>
+        <div class="stat-card">
+            <h3>18</h3>
+            <p>Para Profundizar</p>
+        </div>
+        <div class="stat-card">
+            <h3>7.3</h3>
+            <p>Score promedio</p>
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="filterDeals('all')">Todos</button>
+        <button class="filter-btn" onclick="filterDeals('avanzar')">Avanzar</button>
+        <button class="filter-btn" onclick="filterDeals('profundizar')">Profundizar</button>
+        <button class="filter-btn" onclick="filterDeals('holdear')">Holdear</button>
+        <button class="filter-btn" onclick="filterDeals('rechazar')">Rechazar</button>
+    </div>
+
+    <div class="deals-container" id="dealsContainer"></div>
+
+    <div class="modal" id="dealModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const deals = [
+            {
+                id: 1,
+                company: "FinFlow AI",
+                sector: "Fintech",
+                stage: "Seed",
+                location: "Barcelona",
+                founder: "Maria González",
+                linkedinUrl: "https://linkedin.com/in/mariagonzalez",
+                score: 8.7,
+                recommendation: "avanzar",
+                criteria: {
+                    equipo: 9.2,
+                    mercado: 8.5,
+                    competitividad: 8.3,
+                    traccion: 8.8
+                },
+                justifications: {
+                    equipo: "Fundadora con 8 años en sector bancario (BBVA, CaixaBank). MBA IESE. Co-founder con background técnico de Google. Equipo complementario y sólido.",
+                    mercado: "TAM de €2.3B en España, creciendo 23% anual. Tendencia clara hacia automatización de flujos financieros en SMEs. Timing óptimo.",
+                    competitividad: "Diferenciación clara vs competidores (Kantox, Treasury Spring) por enfoque en automatización vs solo visibilidad. Ventaja técnica verificable.",
+                    traccion: "€120K ARR en 6 meses, 23 clientes pagando (ticket medio €5.2K/año). Churn 0%. NPS 72. Tracción validada."
+                },
+                sources: {
+                    equipo: "LinkedIn + Deck",
+                    mercado: "Deck + Web",
+                    competitividad: "Deck + CRM",
+                    traccion: "Deck + CRM"
+                },
+                enrichedData: {
+                    website: "finflow.ai",
+                    employees: "7 empleados",
+                    funding: "€500K pre-seed (business angels)",
+                    founded: "Febrero 2024",
+                    revenue: "€120K ARR"
+                }
+            },
+            {
+                id: 2,
+                company: "GreenPack Logistics",
+                sector: "Logistics",
+                stage: "Series A",
+                location: "Madrid",
+                founder: "Carlos Ruiz",
+                linkedinUrl: "https://linkedin.com/in/carlosruiz",
+                score: 7.8,
+                recommendation: "profundizar",
+                criteria: {
+                    equipo: 7.5,
+                    mercado: 8.3,
+                    competitividad: 7.2,
+                    traccion: 8.2
+                },
+                justifications: {
+                    equipo: "Fundador con experiencia en logística (ex-Seur) pero primera experiencia como CEO. Equipo técnico junior. Falta senioridad en comercial.",
+                    mercado: "Mercado de logística sostenible en crecimiento. Regulaciones favorables. TAM significativo pero competencia alta de players establecidos.",
+                    competitividad: "Propuesta de valor clara en sostenibilidad pero ejecución similar a competidores. Diferenciación limitada. Riesgo de commoditización.",
+                    traccion: "€890K ARR, 47 clientes B2B. Crecimiento 15% MoM últimos 3 meses. Churn elevado (18% anual). Unit economics mejorando pero aún no óptimos."
+                },
+                sources: {
+                    equipo: "LinkedIn + Entrevista",
+                    mercado: "Deck + Web",
+                    competitividad: "CRM + Deck",
+                    traccion: "CRM + Deck"
+                },
+                nextSteps: [
+                    "Validar pipeline comercial con clientes actuales (referencias)",
+                    "Entender plan para reducir churn del 18% actual",
+                    "Conocer al equipo comercial senior que planean contratar",
+                    "Ver roadmap de producto para diferenciación vs competencia"
+                ],
+                enrichedData: {
+                    website: "greenpacklogistics.com",
+                    employees: "23 empleados",
+                    funding: "€1.2M seed (Encomenda, Seaya)",
+                    founded: "Junio 2022",
+                    revenue: "€890K ARR"
+                }
+            },
+            {
+                id: 3,
+                company: "HealthTech Connect",
+                sector: "HealthTech",
+                stage: "Seed",
+                location: "Valencia",
+                founder: "Dr. Laura Martín",
+                linkedinUrl: "https://linkedin.com/in/lauramartin",
+                score: 8.9,
+                recommendation: "avanzar",
+                criteria: {
+                    equipo: 9.5,
+                    mercado: 8.8,
+                    competitividad: 8.6,
+                    traccion: 8.7
+                },
+                justifications: {
+                    equipo: "Fundadora médico con especialidad en telemedicina. 12 años experiencia clínica. CTO ex-Amazon Health. Equipo excepcional con experiencia dominio + tech.",
+                    mercado: "Mercado telemedicina España creciendo 34% anual post-COVID. Regulación favorable. Necesidad validada por sistema sanitario. TAM €4.1B.",
+                    competitividad: "Única solución integrada con historia clínica electrónica. Partnership con 3 hospitales públicos. Moat regulatorio y técnico verificable.",
+                    traccion: "€215K ARR en 8 meses. 2,400 pacientes activos. 12 clínicas B2B. Pipeline de €680K validado. Métricas sobresalientes para stage."
+                },
+                sources: {
+                    equipo: "LinkedIn + Deck",
+                    mercado: "Deck + Web + Grabación comité",
+                    competitividad: "Deck + CRM",
+                    traccion: "CRM + Deck"
+                },
+                enrichedData: {
+                    website: "healthtechconnect.es",
+                    employees: "11 empleados",
+                    funding: "€750K pre-seed (JME Ventures, angels médicos)",
+                    founded: "Enero 2024",
+                    revenue: "€215K ARR"
+                }
+            },
+            {
+                id: 4,
+                company: "RetailPro Analytics",
+                sector: "Retail Tech",
+                stage: "Seed",
+                location: "Sevilla",
+                founder: "Javier López",
+                linkedinUrl: "https://linkedin.com/in/javierlopez",
+                score: 6.2,
+                recommendation: "holdear",
+                criteria: {
+                    equipo: 6.8,
+                    mercado: 7.2,
+                    competitividad: 5.5,
+                    traccion: 5.3
+                },
+                justifications: {
+                    equipo: "Fundador con experiencia retail pero sin background tech. Equipo técnico outsourced. Falta co-founder técnico. Red flags en estructura de equipo.",
+                    mercado: "Mercado de analytics retail saturado. Muchos players establecidos. Difícil diferenciación. TAM relevante pero acceso complicado.",
+                    competitividad: "Solución similar a competidores (Shopify, Google Analytics). No hay diferenciación clara. Pricing no competitivo. Sin ventaja defendible.",
+                    traccion: "€35K ARR, solo 4 clientes. Alta dependencia de 1 cliente (60% revenue). Churn 40%. Métricas preocupantes. Falta product-market fit."
+                },
+                sources: {
+                    equipo: "LinkedIn + Entrevista",
+                    mercado: "Deck + Web",
+                    competitividad: "CRM + Grabación dealflow",
+                    traccion: "Deck"
+                },
+                nextSteps: [
+                    "Ver incorporación de co-founder técnico antes de avanzar",
+                    "Validar diferenciación técnica clara vs Shopify/Google Analytics",
+                    "Reducir dependencia del cliente principal (diversificación)",
+                    "Entender plan concreto para reducir churn del 40%",
+                    "Revisar en 6 meses si metrics mejoran significativamente"
+                ],
+                enrichedData: {
+                    website: "retailproanalytics.com",
+                    employees: "5 empleados",
+                    funding: "€200K (FFF)",
+                    founded: "Marzo 2023",
+                    revenue: "€35K ARR"
+                }
+            },
+            {
+                id: 5,
+                company: "EduNext Platform",
+                sector: "EdTech",
+                stage: "Series A",
+                location: "Barcelona",
+                founder: "Ana Serrano",
+                linkedinUrl: "https://linkedin.com/in/anaserrano",
+                score: 8.2,
+                recommendation: "profundizar",
+                criteria: {
+                    equipo: 8.5,
+                    mercado: 8.2,
+                    competitividad: 7.8,
+                    traccion: 8.3
+                },
+                justifications: {
+                    equipo: "Fundadora ex-profesora y directora colegio privado. Co-founder CTO ex-Kahoot. Equipo pedagógico fuerte. Falta experiencia scaling B2B SaaS.",
+                    mercado: "EdTech B2B creciendo post-pandemia. Presupuestos educativos aumentando. Mercado español €1.8B. Oportunidad LATAM significativa.",
+                    competitividad: "Diferenciación en contenido adaptativo vs competencia. Tecnología sólida pero sin exclusividad. Varios competidores grandes (Google Classroom, etc).",
+                    traccion: "€720K ARR, 89 colegios. Expansión LATAM iniciada (México, Colombia). Churn bajo 8%. LTV/CAC 4.2x. Métricas B2B sólidas pero necesita acelerar."
+                },
+                sources: {
+                    equipo: "LinkedIn + Deck",
+                    mercado: "Deck + CRM",
+                    competitividad: "CRM + Grabación comité",
+                    traccion: "CRM + Deck"
+                },
+                nextSteps: [
+                    "Validar traction en LATAM (números actuales México/Colombia)",
+                    "Conocer plan de go-to-market para aceleración",
+                    "Entender hiring plan para experiencia B2B SaaS en equipo",
+                    "Ver estrategia de diferenciación sostenible vs Google Classroom"
+                ],
+                enrichedData: {
+                    website: "edunext.es",
+                    employees: "18 empleados",
+                    funding: "€1.5M seed (Cornerstone, JME)",
+                    founded: "Septiembre 2022",
+                    revenue: "€720K ARR"
+                }
+            },
+            {
+                id: 6,
+                company: "FoodChain Trace",
+                sector: "FoodTech",
+                stage: "Seed",
+                location: "Bilbao",
+                founder: "Mikel Etxebarria",
+                linkedinUrl: "https://linkedin.com/in/mikeletxebarria",
+                score: 5.1,
+                recommendation: "rechazar",
+                criteria: {
+                    equipo: 5.5,
+                    mercado: 6.2,
+                    competitividad: 4.8,
+                    traccion: 4.1
+                },
+                justifications: {
+                    equipo: "Fundador sin experiencia previa en tech ni food. Equipo muy junior. Alta rotación (3 personas salieron últimos 6 meses). Concerns sobre ejecución.",
+                    mercado: "Mercado trazabilidad interesante pero altamente regulado. Barreras entrada altas. Ciclos venta muy largos (18+ meses). Difícil para startup seed.",
+                    competitividad: "Solución blockchain genérica sin diferenciación. 15+ competidores directos con más funding. Pricing 3x más caro que alternativas. No sostenible.",
+                    traccion: "€12K ARR, 2 clientes piloto. Runway 4 meses. Burn rate insostenible. Sin pipeline validado. Riesgo alto de no alcanzar next milestone."
+                },
+                sources: {
+                    equipo: "LinkedIn + Entrevista",
+                    mercado: "Deck + Web",
+                    competitividad: "CRM + Grabación dealflow",
+                    traccion: "Deck + CRM"
+                },
+                enrichedData: {
+                    website: "foodchaintrace.io",
+                    employees: "4 empleados",
+                    funding: "€150K (FFF)",
+                    founded: "Julio 2023",
+                    revenue: "€12K ARR"
+                }
+            }
+        ];
+
+        function renderDeals(filteredDeals = deals) {
+            const container = document.getElementById('dealsContainer');
+            container.innerHTML = filteredDeals.map(deal => `
+                <div class="deal-card ${deal.recommendation}">
+                    <div onclick="openModal(${deal.id})">
+                        <div class="deal-header">
+                            <div class="deal-info">
+                                <h3>${deal.company}</h3>
+                                <p>${deal.sector} • ${deal.stage} • ${deal.location}</p>
+                                <div class="deal-tags">
+                                    <span class="tag">👤 ${deal.founder}</span>
+                                </div>
+                                <span class="recommendation ${deal.recommendation}">
+                                    ${deal.recommendation.toUpperCase()}
+                                </span>
+                            </div>
+                            <div class="deal-score">
+                                <div class="score-number" style="color: ${getScoreColor(deal.score)}">${deal.score}</div>
+                                <div class="score-label">Score Final</div>
+                            </div>
+                        </div>
+                        <div class="criteria-scores">
+                            <div class="criteria-item">
+                                <span class="criteria-name">Equipo</span>
+                                <span class="criteria-score">${deal.criteria.equipo}</span>
+                            </div>
+                            <div class="criteria-item">
+                                <span class="criteria-name">Mercado</span>
+                                <span class="criteria-score">${deal.criteria.mercado}</span>
+                            </div>
+                            <div class="criteria-item">
+                                <span class="criteria-name">Competitividad</span>
+                                <span class="criteria-score">${deal.criteria.competitividad}</span>
+                            </div>
+                            <div class="criteria-item">
+                                <span class="criteria-name">Tracción</span>
+                                <span class="criteria-score">${deal.criteria.traccion}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="push-crm-btn" onclick="pushToCRM(${deal.id}, event)">Push to CRM</button>
+                </div>
+            `).join('');
+        }
+
+        function getScoreColor(score) {
+            if (score >= 8.5) return '#48bb78';
+            if (score >= 7.5) return '#4299e1';
+            if (score >= 6.5) return '#ed8936';
+            return '#f56565';
+        }
+
+        function filterDeals(filter) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (filter === 'all') {
+                renderDeals(deals);
+            } else {
+                const filtered = deals.filter(deal => deal.recommendation === filter);
+                renderDeals(filtered);
+            }
+        }
+
+        function updatePeriod(period) {
+            console.log('Periodo seleccionado:', period);
+            // Aquí se actualizarían las stats y deals según el periodo
+        }
+
+        function pushToCRM(dealId, event) {
+            event.stopPropagation();
+            const deal = deals.find(d => d.id === dealId);
+            alert(`✓ ${deal.company} pushed to CRM successfully`);
+        }
+
+        function openModal(dealId) {
+            const deal = deals.find(d => d.id === dealId);
+            const modal = document.getElementById('dealModal');
+            const content = document.getElementById('modalContent');
+
+            const nextStepsHtml = deal.nextSteps ? `
+                <div class="next-steps-section">
+                    <h4>📋 Qué pedir para destrabar este deal:</h4>
+                    <ul>
+                        ${deal.nextSteps.map(step => `<li>${step}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : '';
+
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h2>${deal.company}</h2>
+                    <p>${deal.sector} • ${deal.stage} • ${deal.location}</p>
+                    <a href="${deal.linkedinUrl}" target="_blank" class="linkedin-link">
+                        Link to LinkedIn →
+                    </a>
+                    <span class="recommendation ${deal.recommendation}" style="font-size: 14px; padding: 8px 16px; margin-left: 10px;">
+                        ${deal.recommendation.toUpperCase()}
+                    </span>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Score Global: <span style="color: ${getScoreColor(deal.score)}">${deal.score}/10</span></h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px;">
+                        <div>
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">EQUIPO</div>
+                            <div style="font-size: 24px; font-weight: 600;">${deal.criteria.equipo}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">MERCADO</div>
+                            <div style="font-size: 24px; font-weight: 600;">${deal.criteria.mercado}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">COMPETITIVIDAD</div>
+                            <div style="font-size: 24px; font-weight: 600;">${deal.criteria.competitividad}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #718096; margin-bottom: 5px;">TRACCIÓN</div>
+                            <div style="font-size: 24px; font-weight: 600;">${deal.criteria.traccion}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Análisis Detallado</h3>
+                    <div class="justification">
+                        <h4>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Equipo (${deal.criteria.equipo}/10)
+                        </h4>
+                        <p>${deal.justifications.equipo}</p>
+                        <span class="source-badge">Source: ${deal.sources.equipo}</span>
+                    </div>
+                    <div class="justification">
+                        <h4>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            Mercado (${deal.criteria.mercado}/10)
+                        </h4>
+                        <p>${deal.justifications.mercado}</p>
+                        <span class="source-badge">Source: ${deal.sources.mercado}</span>
+                    </div>
+                    <div class="justification">
+                        <h4>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            Competitividad (${deal.criteria.competitividad}/10)
+                        </h4>
+                        <p>${deal.justifications.competitividad}</p>
+                        <span class="source-badge">Source: ${deal.sources.competitividad}</span>
+                    </div>
+                    <div class="justification">
+                        <h4>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            Tracción (${deal.criteria.traccion}/10)
+                        </h4>
+                        <p>${deal.justifications.traccion}</p>
+                        <span class="source-badge">Source: ${deal.sources.traccion}</span>
+                    </div>
+                </div>
+
+                ${nextStepsHtml}
+
+                <div class="detail-section">
+                    <h3>Datos Enriquecidos</h3>
+                    <div class="enriched-data">
+                        <div class="data-item">
+                            <strong>Website</strong>
+                            <p>${deal.enrichedData.website}</p>
+                        </div>
+                        <div class="data-item">
+                            <strong>Equipo</strong>
+                            <p>${deal.enrichedData.employees}</p>
+                        </div>
+                        <div class="data-item">
+                            <strong>Funding Previo</strong>
+                            <p>${deal.enrichedData.funding}</p>
+                        </div>
+                        <div class="data-item">
+                            <strong>Fundación</strong>
+                            <p>${deal.enrichedData.founded}</p>
+                        </div>
+                        <div class="data-item">
+                            <strong>Revenue</strong>
+                            <p>${deal.enrichedData.revenue}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('dealModal').classList.remove('active');
+        }
+
+        document.getElementById('dealModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        renderDeals();
+    </script>
+</body>
+</html>
